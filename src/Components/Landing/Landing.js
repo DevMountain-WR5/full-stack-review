@@ -3,6 +3,8 @@
 //functions for logging in and creating an account.
 import React, {Component} from 'react';
 import axios from 'axios';
+import {connect} from 'react-redux';
+import {getUser} from '../../redux/reducer';
 import './Landing.css';
 
 class Landing extends Component {
@@ -18,6 +20,12 @@ class Landing extends Component {
         }
     }
 
+    componentDidMount(){
+        if(this.props.user.email){
+            this.props.history.push('/dash');
+        }
+    }
+
     handleInput = (event) => {
         this.setState({[event.target.name]: event.target.value})
     }
@@ -27,11 +35,28 @@ class Landing extends Component {
     }
 
     handleRegister = () => {
-
+        const {username, email, password, verPassword, picture} = this.state;
+        if(password && password === verPassword){
+            axios.post('/api/register', {username, email, password, profilePicture: picture})
+            .then(res => {
+                this.props.getUser(res.data);
+                this.props.history.push('/dash');
+            })
+            .catch(err => console.log(err));
+        } else {
+            alert("Passwords don't match")
+        }
     }
 
     handleLogin = () => {
+        const {email, password} = this.state;
 
+        axios.post('/api/login', {email, password})
+        .then(res => {
+            this.props.getUser(res.data);
+            this.props.history.push('/dash');
+        })
+        .catch(err => console.log(err));
     }
 
     render(){
@@ -86,4 +111,6 @@ class Landing extends Component {
     }
 }
 
-export default Landing;
+const mapStateToProps = reduxState => reduxState;
+
+export default connect(mapStateToProps, {getUser})(Landing);
